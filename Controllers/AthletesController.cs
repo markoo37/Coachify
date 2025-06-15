@@ -4,12 +4,13 @@ using CoachCRM.Models;
 using CoachCRM.Data;
 using CoachCRM.Extensions;
 using CoachCRM.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoachCRM.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
-
 public class AthletesController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -18,30 +19,58 @@ public class AthletesController : ControllerBase
     {
         _context = context;
     }
-    
-    //GET api/athletes
+
+    // GET: api/athletes
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Athlete>>> GetAthletes()
+    public async Task<ActionResult<IEnumerable<AthleteDto>>> GetAthletes()
     {
-        return await _context.Athletes.ToListAsync();
+        int userId = User.GetUserId();
+
+        var athletes = await _context.Athletes
+            .Include(a => a.Team)
+            .Where(a => a.Team.Coach.UserId == userId)
+            .ToListAsync();
+
+        var dtoList = athletes.Select(a => a.ToDto()).ToList();
+
+        return Ok(dtoList);
     }
-    
-    //GET api/athletes/{id}
+
+    // GET: api/athletes/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<Athlete>> GetAthlete(int id)
+    public async Task<ActionResult<AthleteDto>> GetAthlete(int id)
     {
-        var athlete = await _context.Athletes.FindAsync(id);
+        int userId = User.GetUserId();
+
+        var athlete = await _context.Athletes
+            .Include(a => a.Team)
+            .ThenInclude(t => t.Coach)
+            .FirstOrDefaultAsync(a => a.Id == id && a.Team.Coach.UserId == userId);
+
         if (athlete == null)
         {
             return NotFound();
         }
-        return athlete;
+
+        return Ok(athlete.ToDto());
     }
-    
-    //POST api/athletes
+
+    // POST: api/athletes
     [HttpPost]
     public async Task<ActionResult<AthleteDto>> PostAthlete(CreateAthleteDto dto)
     {
+        int userId = User.GetUserId();
+
+        // Ellenőrizzük, hogy a megadott team a bejelentkezett userhez tartozik-e
+        var team = await _context.Teams
+            .Include(t => t.Coach)
+            .FirstOrDefaultAsync(t => t.Id == dto.TeamId && t.Coach.UserId == userId);
+
+        if (team == null)
+        {
+            return BadRequest("Invalid team for current user.");
+        }
+
         var athlete = new Athlete
         {
             FirstName = dto.FirstName,
@@ -49,7 +78,7 @@ public class AthletesController : ControllerBase
             BirthDate = dto.BirthDate,
             Weight = dto.Weight,
             Height = dto.Height,
-            TeamId = dto.TeamId
+            TeamId = team.Id
         };
 
         _context.Athletes.Add(athlete);
@@ -58,17 +87,29 @@ public class AthletesController : ControllerBase
         return CreatedAtAction(nameof(GetAthlete), new { id = athlete.Id }, athlete.ToDto());
     }
 
-    
     // PUT: api/athletes/5
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutAthlete(int id, Athlete athlete)
+    public async Task<IActionResult> PutAthlete(int id, CreateAthleteDto dto)
     {
-        if (id != athlete.Id)
+        int userId = User.GetUserId();
+
+        var athlete = await _context.Athletes
+            .Include(a => a.Team)
+            .ThenInclude(t => t.Coach)
+            .FirstOrDefaultAsync(a => a.Id == id && a.Team.Coach.UserId == userId);
+
+        if (athlete == null)
         {
-            return BadRequest();
+            return NotFound();
         }
 
-        _context.Entry(athlete).State = EntityState.Modified;
+        athlete.FirstName = dto.FirstName;
+        athlete.LastName = dto.LastName;
+        athlete.BirthDate = dto.BirthDate;
+        athlete.Weight = dto.Weight;
+        athlete.Height = dto.Height;
+        athlete.TeamId = dto.TeamId;
+
         await _context.SaveChangesAsync();
 
         return NoContent();
@@ -78,7 +119,13 @@ public class AthletesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAthlete(int id)
     {
-        var athlete = await _context.Athletes.FindAsync(id);
+        int userId = User.GetUserId();
+
+        var athlete = await _context.Athletes
+            .Include(a => a.Team)
+            .ThenInclude(t => t.Coach)
+            .FirstOrDefaultAsync(a => a.Id == id && a.Team.Coach.UserId == userId);
+
         if (athlete == null)
         {
             return NotFound();

@@ -5,6 +5,8 @@ namespace CoachCRM.Data;
 
 public class AppDbContext : DbContext
 {
+    public DbSet<CoachUser> CoachUsers { get; set; } = null!;
+    
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     
     public DbSet<Athlete> Athletes { get; set; }
@@ -25,6 +27,11 @@ public class AppDbContext : DbContext
         {
             entity.Property(e => e.StartDate).HasColumnType("timestamp with time zone");
             entity.Property(e => e.EndDate).HasColumnType("timestamp with time zone");
+        });
+
+        modelBuilder.Entity<CoachUser>(entity =>
+        {
+            entity.HasIndex(e => e.Email).IsUnique();
         });
     }
 

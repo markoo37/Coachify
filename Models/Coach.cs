@@ -7,5 +7,8 @@ public class Coach
     public string LastName { get; set; }
     public string Email { get; set; }
     
+    public int UserId { get; set; }
+    public CoachUser User { get; set; }
+    
     public List<Team> Teams { get; set; } = new();
 }

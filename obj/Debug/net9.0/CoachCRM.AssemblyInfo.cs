@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CoachCRM")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+27a7a277a635748a6b0cb1cbdea181e162e69ed0")]
 [assembly: System.Reflection.AssemblyProductAttribute("CoachCRM")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CoachCRM")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

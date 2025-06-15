@@ -4,9 +4,11 @@ using CoachCRM.Data;
 using CoachCRM.Models;
 using CoachCRM.Dtos;
 using CoachCRM.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoachCRM.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CoachesController : ControllerBase
@@ -18,73 +20,49 @@ namespace CoachCRM.Controllers
             _context = context;
         }
 
+        // GET: api/coaches (megváltozik → mindig csak saját coach adat)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Coach>>> GetCoaches()
+        public async Task<ActionResult<CoachDto>> GetCoach()
         {
-            return await _context.Coaches
-                .Include(c => c.Teams)
-                .ToListAsync();
-        }
+            int userId = User.GetUserId();
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Coach>> GetCoach(int id)
-        {
             var coach = await _context.Coaches
                 .Include(c => c.Teams)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (coach == null)
             {
                 return NotFound();
             }
 
-            return coach;
+            return Ok(coach.ToDto());
         }
 
-        [HttpPost]
-        public async Task<ActionResult<CoachDto>> PostCoach(CreateCoachDto dto)
+        // POST már nem kell → regisztrációkor létrehozzuk automatikusan a Coach rekordot
+
+        // PUT: api/coaches
+        [HttpPut]
+        public async Task<IActionResult> UpdateCoach(UpdateCoachDto dto)
         {
-            var coach = new Coach
-            {
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Email = dto.Email
-            };
+            int userId = User.GetUserId();
 
-            _context.Coaches.Add(coach);
-            await _context.SaveChangesAsync();
+            var coach = await _context.Coaches
+                .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            return CreatedAtAction(nameof(GetCoach), new { id = coach.Id }, coach.ToDto());
-        }
-
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCoach(int id, Coach coach)
-        {
-            if (id != coach.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(coach).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCoach(int id)
-        {
-            var coach = await _context.Coaches.FindAsync(id);
             if (coach == null)
             {
                 return NotFound();
             }
 
-            _context.Coaches.Remove(coach);
+            coach.FirstName = dto.FirstName;
+            coach.LastName = dto.LastName;
+            coach.Email = dto.Email;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
+        // DELETE sem kell → coach saját magát nem törölheti backendből (opcionális)
     }
 }

@@ -130,3 +130,14 @@
 /Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/obj/Debug/net9.0/CoachCRM.pdb
 /Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/obj/Debug/net9.0/CoachCRM.genruntimeconfig.cache
 /Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/obj/Debug/net9.0/ref/CoachCRM.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/DotNetEnv.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Sprache.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/obj/Debug/net9.0/CoachCRM.sourcelink.json
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Microsoft.IdentityModel.Logging.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
+/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll

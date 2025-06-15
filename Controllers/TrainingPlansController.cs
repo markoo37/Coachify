@@ -4,9 +4,11 @@ using CoachCRM.Data;
 using CoachCRM.Models;
 using CoachCRM.Extensions;
 using CoachCRM.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoachCRM.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TrainingPlansController : ControllerBase
@@ -19,39 +21,65 @@ namespace CoachCRM.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TrainingPlan>>> GetTrainingPlans()
+        public async Task<ActionResult<IEnumerable<TrainingPlanDto>>> GetTrainingPlans()
         {
-            return await _context.TrainingPlans
+            int userId = User.GetUserId();
+
+            var plans = await _context.TrainingPlans
                 .Include(tp => tp.Athlete)
+                    .ThenInclude(a => a.Team)
+                    .ThenInclude(t => t.Coach)
+                .Where(tp => tp.Athlete.Team.Coach.UserId == userId)
                 .ToListAsync();
+
+            var dtoList = plans.Select(tp => tp.ToDto()).ToList();
+
+            return Ok(dtoList);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<TrainingPlan>> GetTrainingPlan(int id)
+        public async Task<ActionResult<TrainingPlanDto>> GetTrainingPlan(int id)
         {
+            int userId = User.GetUserId();
+
             var plan = await _context.TrainingPlans
                 .Include(tp => tp.Athlete)
-                .FirstOrDefaultAsync(tp => tp.Id == id);
+                    .ThenInclude(a => a.Team)
+                    .ThenInclude(t => t.Coach)
+                .FirstOrDefaultAsync(tp => tp.Id == id && tp.Athlete.Team.Coach.UserId == userId);
 
             if (plan == null)
             {
                 return NotFound();
             }
 
-            return plan;
+            return Ok(plan.ToDto());
         }
 
         [HttpPost]
         public async Task<ActionResult<TrainingPlanDto>> PostTrainingPlan(CreateTrainingPlanDto dto)
         {
+            int userId = User.GetUserId();
+
+            // Ellenőrizzük, hogy az Athlete hozzá tartozik-e a bejelentkezett coachhoz
+            var athlete = await _context.Athletes
+                .Include(a => a.Team)
+                    .ThenInclude(t => t.Coach)
+                .FirstOrDefaultAsync(a => a.Id == dto.AthleteId && a.Team.Coach.UserId == userId);
+
+            if (athlete == null)
+            {
+                return BadRequest("Invalid athlete for current user.");
+            }
+
             var plan = new TrainingPlan
             {
                 Name = dto.Name,
                 Description = dto.Description,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
-                AthleteId = dto.AthleteId,
-                TeamId = dto.TeamId
+                AthleteId = athlete.Id,
+                TeamId = athlete.TeamId
             };
 
             _context.TrainingPlans.Add(plan);
@@ -60,16 +88,27 @@ namespace CoachCRM.Controllers
             return CreatedAtAction(nameof(GetTrainingPlan), new { id = plan.Id }, plan.ToDto());
         }
 
-
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTrainingPlan(int id, TrainingPlan plan)
+        public async Task<IActionResult> PutTrainingPlan(int id, CreateTrainingPlanDto dto)
         {
-            if (id != plan.Id)
+            int userId = User.GetUserId();
+
+            var plan = await _context.TrainingPlans
+                .Include(tp => tp.Athlete)
+                    .ThenInclude(a => a.Team)
+                    .ThenInclude(t => t.Coach)
+                .FirstOrDefaultAsync(tp => tp.Id == id && tp.Athlete.Team.Coach.UserId == userId);
+
+            if (plan == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(plan).State = EntityState.Modified;
+            plan.Name = dto.Name;
+            plan.Description = dto.Description;
+            plan.StartDate = dto.StartDate;
+            plan.EndDate = dto.EndDate;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -78,7 +117,14 @@ namespace CoachCRM.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTrainingPlan(int id)
         {
-            var plan = await _context.TrainingPlans.FindAsync(id);
+            int userId = User.GetUserId();
+
+            var plan = await _context.TrainingPlans
+                .Include(tp => tp.Athlete)
+                    .ThenInclude(a => a.Team)
+                    .ThenInclude(t => t.Coach)
+                .FirstOrDefaultAsync(tp => tp.Id == id && tp.Athlete.Team.Coach.UserId == userId);
+
             if (plan == null)
             {
                 return NotFound();
