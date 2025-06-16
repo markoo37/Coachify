@@ -20,13 +20,13 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Athlete>(entity =>
         {
-            entity.Property(e => e.BirthDate).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.BirthDate).HasColumnType("date");
         });
 
         modelBuilder.Entity<TrainingPlan>(entity =>
         {
-            entity.Property(e => e.StartDate).HasColumnType("timestamp with time zone");
-            entity.Property(e => e.EndDate).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.StartDate).HasColumnType("date");
+            entity.Property(e => e.EndDate).HasColumnType("date");
         });
 
         modelBuilder.Entity<CoachUser>(entity =>

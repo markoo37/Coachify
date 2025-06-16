@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CoachCRM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250615164309_FixTeam")]
-    partial class FixTeam
+    [Migration("20250616105548_InitialCreateV3")]
+    partial class InitialCreateV3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace CoachCRM.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("BirthDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("date");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -80,9 +80,42 @@ namespace CoachCRM.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Coaches");
+                });
+
+            modelBuilder.Entity("CoachCRM.Models.CoachUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<byte[]>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("PasswordSalt")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("CoachUsers");
                 });
 
             modelBuilder.Entity("CoachCRM.Models.Team", b =>
@@ -123,14 +156,14 @@ namespace CoachCRM.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("date");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("date");
 
                     b.Property<int?>("TeamId")
                         .HasColumnType("integer");
@@ -146,9 +179,22 @@ namespace CoachCRM.Migrations
 
             modelBuilder.Entity("CoachCRM.Models.Athlete", b =>
                 {
-                    b.HasOne("CoachCRM.Models.Team", null)
+                    b.HasOne("CoachCRM.Models.Team", "Team")
                         .WithMany("Athletes")
                         .HasForeignKey("TeamId");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("CoachCRM.Models.Coach", b =>
+                {
+                    b.HasOne("CoachCRM.Models.CoachUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("CoachCRM.Models.Team", b =>
@@ -165,7 +211,7 @@ namespace CoachCRM.Migrations
             modelBuilder.Entity("CoachCRM.Models.TrainingPlan", b =>
                 {
                     b.HasOne("CoachCRM.Models.Athlete", "Athlete")
-                        .WithMany()
+                        .WithMany("TrainingPlans")
                         .HasForeignKey("AthleteId");
 
                     b.HasOne("CoachCRM.Models.Team", "Team")
@@ -175,6 +221,11 @@ namespace CoachCRM.Migrations
                     b.Navigation("Athlete");
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("CoachCRM.Models.Athlete", b =>
+                {
+                    b.Navigation("TrainingPlans");
                 });
 
             modelBuilder.Entity("CoachCRM.Models.Coach", b =>
