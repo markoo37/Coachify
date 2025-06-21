@@ -26,12 +26,21 @@ public class AthletesController : ControllerBase
     {
         int userId = User.GetUserId();
 
-        var athletes = await _context.Athletes
-            .Include(a => a.Team)
-            .Where(a => a.Team.Coach.UserId == userId)
+        var memberships = await _context.TeamMemberships
+            .Include(tm => tm.Athlete)
+                .ThenInclude(a => a.User)
+            .Include(tm => tm.Team)
+                .ThenInclude(t => t.Coach)
+            .Where(tm => tm.Team.Coach.UserId == userId)
             .ToListAsync();
 
-        var dtoList = athletes.Select(a => a.ToDto()).ToList();
+        var athletes = memberships
+            .Select(tm => tm.Athlete)
+            .Distinct();
+
+        var dtoList = athletes
+            .Select(a => a.ToDto())
+            .ToList();
 
         return Ok(dtoList);
     }
@@ -42,89 +51,99 @@ public class AthletesController : ControllerBase
     {
         int userId = User.GetUserId();
 
-        var athlete = await _context.Athletes
-            .Include(a => a.Team)
-            .ThenInclude(t => t.Coach)
-            .FirstOrDefaultAsync(a => a.Id == id && a.Team.Coach.UserId == userId);
+        var membership = await _context.TeamMemberships
+            .Include(tm => tm.Team)
+                .ThenInclude(t => t.Coach)
+            .Include(tm => tm.Athlete)
+                .ThenInclude(a => a.User)
+            .FirstOrDefaultAsync(tm => tm.Athlete.Id == id && tm.Team.Coach.UserId == userId);
 
-        if (athlete == null)
+        if (membership == null)
         {
             return NotFound();
         }
 
-        return Ok(athlete.ToDto());
+        return Ok(membership.Athlete.ToDto());
     }
 
     // POST: api/athletes
+    // CoachCRM/Controllers/AthletesController.cs
+
     [HttpPost]
     public async Task<ActionResult<AthleteDto>> PostAthlete(CreateAthleteDto dto)
     {
         int userId = User.GetUserId();
+        var coach = await _context.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (coach == null) return Unauthorized();
 
-        // Ellenőrizzük, hogy a megadott team a bejelentkezett userhez tartozik-e
         var team = await _context.Teams
-            .Include(t => t.Coach)
-            .FirstOrDefaultAsync(t => t.Id == dto.TeamId && t.Coach.UserId == userId);
-
-        if (team == null)
-        {
-            return BadRequest("Invalid team for current user.");
-        }
+            .FirstOrDefaultAsync(t => t.Id == dto.TeamId && t.CoachId == coach.Id);
+        if (team == null) return BadRequest("Invalid team.");
 
         var athlete = new Athlete
         {
             FirstName = dto.FirstName,
-            LastName = dto.LastName,
+            LastName  = dto.LastName,
             BirthDate = dto.BirthDate,
-            Weight = dto.Weight,
-            Height = dto.Height,
-            TeamId = team.Id
+            Weight    = dto.Weight,
+            Height    = dto.Height,
+            Email     = dto.Email   // ide kerüljön az email
         };
-
         _context.Athletes.Add(athlete);
+        await _context.SaveChangesAsync();
+
+        var membership = new TeamMembership
+        {
+            AthleteId = athlete.Id,
+            TeamId    = team.Id
+        };
+        _context.TeamMemberships.Add(membership);
         await _context.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetAthlete), new { id = athlete.Id }, athlete.ToDto());
     }
 
-    // PUT: api/athletes/5
+
+    // PUT: api/athletes/{id}
     [HttpPut("{id}")]
     public async Task<IActionResult> PutAthlete(int id, CreateAthleteDto dto)
     {
         int userId = User.GetUserId();
 
-        var athlete = await _context.Athletes
-            .Include(a => a.Team)
-            .ThenInclude(t => t.Coach)
-            .FirstOrDefaultAsync(a => a.Id == id && a.Team.Coach.UserId == userId);
+        var membership = await _context.TeamMemberships
+            .Include(tm => tm.Team)
+                .ThenInclude(t => t.Coach)
+            .Include(tm => tm.Athlete)
+                .ThenInclude(a => a.User)
+            .FirstOrDefaultAsync(tm => tm.Athlete.Id == id && tm.Team.Coach.UserId == userId);
 
-        if (athlete == null)
+        if (membership == null)
         {
             return NotFound();
         }
 
+        var athlete = membership.Athlete;
         athlete.FirstName = dto.FirstName;
-        athlete.LastName = dto.LastName;
+        athlete.LastName  = dto.LastName;
         athlete.BirthDate = dto.BirthDate;
-        athlete.Weight = dto.Weight;
-        athlete.Height = dto.Height;
-        athlete.TeamId = dto.TeamId;
+        athlete.Weight    = dto.Weight;
+        athlete.Height    = dto.Height;
 
         await _context.SaveChangesAsync();
-
         return NoContent();
     }
 
-    // DELETE: api/athletes/5
+    // DELETE: api/athletes/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAthlete(int id)
     {
         int userId = User.GetUserId();
 
         var athlete = await _context.Athletes
-            .Include(a => a.Team)
-            .ThenInclude(t => t.Coach)
-            .FirstOrDefaultAsync(a => a.Id == id && a.Team.Coach.UserId == userId);
+            .Include(a => a.TeamMemberships)
+                .ThenInclude(tm => tm.Team)
+                    .ThenInclude(t => t.Coach)
+            .FirstOrDefaultAsync(a => a.Id == id && a.TeamMemberships.Any(tm => tm.Team.Coach.UserId == userId));
 
         if (athlete == null)
         {

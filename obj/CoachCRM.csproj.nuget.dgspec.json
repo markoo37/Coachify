@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/CoachCRM.csproj": {}
+    "/Users/spitzmark/Coachify/CoachCRM/CoachCRM/CoachCRM.csproj": {}
   },
   "projects": {
-    "/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/CoachCRM.csproj": {
+    "/Users/spitzmark/Coachify/CoachCRM/CoachCRM/CoachCRM.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/CoachCRM.csproj",
+        "projectUniqueName": "/Users/spitzmark/Coachify/CoachCRM/CoachCRM/CoachCRM.csproj",
         "projectName": "CoachCRM",
-        "projectPath": "/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/CoachCRM.csproj",
+        "projectPath": "/Users/spitzmark/Coachify/CoachCRM/CoachCRM/CoachCRM.csproj",
         "packagesPath": "/Users/spitzmark/.nuget/packages/",
-        "outputPath": "/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/obj/",
+        "outputPath": "/Users/spitzmark/Coachify/CoachCRM/CoachCRM/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/spitzmark/.nuget/NuGet/NuGet.Config"

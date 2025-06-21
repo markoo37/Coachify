@@ -10,7 +10,8 @@ public class Team
     public Coach? Coach { get; set; }
 
     // Sportolók (később hozzáadjuk)
-    public List<Athlete> Athletes { get; set; } = new();
+    
+    public List<TeamMembership> TeamMemberships { get; set; } = new();
 
     // TrainingPlans kapcsolat
     public List<TrainingPlan> TrainingPlans { get; set; } = new();

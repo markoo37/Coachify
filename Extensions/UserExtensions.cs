@@ -15,5 +15,27 @@ namespace CoachCRM.Extensions
 
             return int.Parse(userIdClaim);
         }
+        
+        public static string GetEmail(this ClaimsPrincipal user)
+        {
+            return user.FindFirst("email")?.Value ?? throw new InvalidOperationException("Email not found in claims");
+        }
+
+        public static string GetUserType(this ClaimsPrincipal user)
+        {
+            return user.FindFirst("userType")?.Value ?? "Unknown";
+        }
+
+        public static int? GetCoachId(this ClaimsPrincipal user)
+        {
+            var coachIdClaim = user.FindFirst("coachId")?.Value;
+            return int.TryParse(coachIdClaim, out int coachId) ? coachId : null;
+        }
+
+        public static int? GetAthleteId(this ClaimsPrincipal user)
+        {
+            var athleteIdClaim = user.FindFirst("athleteId")?.Value;
+            return int.TryParse(athleteIdClaim, out int athleteId) ? athleteId : null;
+        }
     }
 }

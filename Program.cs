@@ -83,15 +83,23 @@ builder.Services.AddControllers(options =>
         .RequireAuthenticatedUser()
         .Build();
     options.Filters.Add(new AuthorizeFilter(policy));
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
 });
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy => policy
-            .AllowAnyOrigin()
+    options.AddPolicy("AllowFrontend", policy =>
+        policy
+            .WithOrigins(
+                "https://localhost:5173",
+                "https://bf7f-2a02-ab88-3804-6000-1421-3625-4599-bd05.ngrok-free.app"
+            )
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials()
+    );
 });
 
 

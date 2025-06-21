@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "C/oV2GPjcOk=",
+  "dgSpecHash": "V21enZfxz9k=",
   "success": true,
-  "projectFilePath": "/Users/spitzmark/RiderProjects/CoachCRM/CoachCRM/CoachCRM.csproj",
+  "projectFilePath": "/Users/spitzmark/Coachify/CoachCRM/CoachCRM/CoachCRM.csproj",
   "expectedPackageFiles": [
     "/Users/spitzmark/.nuget/packages/dotnetenv/3.1.1/dotnetenv.3.1.1.nupkg.sha512",
     "/Users/spitzmark/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
