@@ -58,11 +58,18 @@ public class AppDbContext : DbContext
         });
 
         // ─── TrainingPlan konfiguráció ────────────────────────────────────────
-        modelBuilder.Entity<TrainingPlan>(entity =>
-        {
-            entity.Property(tp => tp.StartDate).HasColumnType("date");
-            entity.Property(tp => tp.EndDate).HasColumnType("date");
-        });
+        modelBuilder.Entity<TrainingPlan>()
+            .Property(tp => tp.Date)
+            .HasColumnType("date");
+
+        modelBuilder.Entity<TrainingPlan>()
+            .Property(tp => tp.StartTime)
+            .HasColumnType("time");
+
+        modelBuilder.Entity<TrainingPlan>()
+            .Property(tp => tp.EndTime)
+            .HasColumnType("time");
+
 
         // ─── Coach ↔ Teams 1:N ─────────────────────────────────────────────────
         modelBuilder.Entity<Coach>()

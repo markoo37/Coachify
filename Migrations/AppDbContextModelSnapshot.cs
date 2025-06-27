@@ -223,19 +223,22 @@ namespace CoachCRM.Migrations
                     b.Property<int?>("AthleteId")
                         .HasColumnType("integer");
 
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("date");
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("date");
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time");
 
                     b.Property<int?>("TeamId")
                         .HasColumnType("integer");

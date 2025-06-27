@@ -26,14 +26,19 @@ namespace CoachCRM.Controllers
         {
             int userId = User.GetUserId();
 
-            // Only plans for athletes in teams coached by current user
             var plans = await _context.TrainingPlans
+                .Include(tp => tp.Team)
                 .Include(tp => tp.Athlete)
                     .ThenInclude(a => a.TeamMemberships)
                         .ThenInclude(tm => tm.Team)
                             .ThenInclude(t => t.Coach)
-                .Where(tp => tp.Athlete.TeamMemberships
-                    .Any(tm => tm.Team.Coach.UserId == userId))
+                .Where(tp => 
+                    // Plans assigned to a team that the coach owns
+                    (tp.Team != null && tp.Team.Coach.UserId == userId)
+                    // OR plans assigned to an athlete in a coach's team
+                    || (tp.Athlete != null && tp.Athlete.TeamMemberships
+                        .Any(tm => tm.Team.Coach.UserId == userId))
+                )
                 .ToListAsync();
 
             var dtoList = plans.Select(tp => tp.ToDto()).ToList();
@@ -47,13 +52,15 @@ namespace CoachCRM.Controllers
             int userId = User.GetUserId();
 
             var plan = await _context.TrainingPlans
+                .Include(tp => tp.Team)
                 .Include(tp => tp.Athlete)
                     .ThenInclude(a => a.TeamMemberships)
                         .ThenInclude(tm => tm.Team)
                             .ThenInclude(t => t.Coach)
-                .FirstOrDefaultAsync(tp => tp.Id == id &&
-                    tp.Athlete.TeamMemberships
-                        .Any(tm => tm.Team.Coach.UserId == userId));
+                .FirstOrDefaultAsync(tp => tp.Id == id && (
+                    (tp.Team != null && tp.Team.Coach.UserId == userId)
+                    || (tp.Athlete != null && tp.Athlete.TeamMemberships
+                        .Any(tm => tm.Team.Coach.UserId == userId))));
 
             if (plan == null)
                 return NotFound();
@@ -67,26 +74,57 @@ namespace CoachCRM.Controllers
         {
             int userId = User.GetUserId();
 
-            // Verify athlete belongs to this coach
-            var athlete = await _context.Athletes
-                .Include(a => a.TeamMemberships)
-                    .ThenInclude(tm => tm.Team)
-                        .ThenInclude(t => t.Coach)
-                .FirstOrDefaultAsync(a => a.Id == dto.AthleteId &&
-                    a.TeamMemberships.Any(tm => tm.Team.Coach.UserId == userId));
+            TrainingPlan plan;
 
-            if (athlete == null)
-                return BadRequest("Invalid athlete for current user.");
-
-            var plan = new TrainingPlan
+            // Assign to team
+            if (dto.TeamId.HasValue)
             {
-                Name       = dto.Name,
-                Description= dto.Description,
-                StartDate  = dto.StartDate,
-                EndDate    = dto.EndDate,
-                AthleteId  = athlete.Id,
-                TeamId     = null // optional: remove TeamId from plan or handle via TeamMembership
-            };
+                var team = await _context.Teams
+                    .Include(t => t.Coach)
+                    .FirstOrDefaultAsync(t => t.Id == dto.TeamId && t.Coach.UserId == userId);
+
+                if (team == null)
+                    return BadRequest("Invalid team for current user.");
+
+                plan = new TrainingPlan
+                {
+                    Name        = dto.Name,
+                    Description = dto.Description,
+                    Date        = dto.Date,
+                    StartTime = dto.StartTime,
+                    EndTime    = dto.EndTime,
+                    TeamId      = team.Id,
+                    AthleteId   = null
+                };
+            }
+            // Assign to athlete
+            else if (dto.AthleteId.HasValue)
+            {
+                var athlete = await _context.Athletes
+                    .Include(a => a.TeamMemberships)
+                        .ThenInclude(tm => tm.Team)
+                            .ThenInclude(t => t.Coach)
+                    .FirstOrDefaultAsync(a => a.Id == dto.AthleteId && 
+                        a.TeamMemberships.Any(tm => tm.Team.Coach.UserId == userId));
+
+                if (athlete == null)
+                    return BadRequest("Invalid athlete for current user.");
+
+                plan = new TrainingPlan
+                {
+                    Name        = dto.Name,
+                    Description = dto.Description,
+                    Date        = dto.Date,
+                    StartTime = dto.StartTime,
+                    EndTime    = dto.EndTime,
+                    AthleteId   = athlete.Id,
+                    TeamId      = null
+                };
+            }
+            else
+            {
+                return BadRequest("Must specify either AthleteId or TeamId.");
+            }
 
             _context.TrainingPlans.Add(plan);
             await _context.SaveChangesAsync();
@@ -101,21 +139,24 @@ namespace CoachCRM.Controllers
             int userId = User.GetUserId();
 
             var plan = await _context.TrainingPlans
+                .Include(tp => tp.Team)
                 .Include(tp => tp.Athlete)
                     .ThenInclude(a => a.TeamMemberships)
                         .ThenInclude(tm => tm.Team)
                             .ThenInclude(t => t.Coach)
-                .FirstOrDefaultAsync(tp => tp.Id == id &&
-                    tp.Athlete.TeamMemberships
-                        .Any(tm => tm.Team.Coach.UserId == userId));
+                .FirstOrDefaultAsync(tp => tp.Id == id && (
+                    (tp.Team != null && tp.Team.Coach.UserId == userId)
+                    || (tp.Athlete != null && tp.Athlete.TeamMemberships
+                        .Any(tm => tm.Team.Coach.UserId == userId))));
 
             if (plan == null)
                 return NotFound();
 
             plan.Name        = dto.Name;
             plan.Description = dto.Description;
-            plan.StartDate   = dto.StartDate;
-            plan.EndDate     = dto.EndDate;
+            plan.Date        = dto.Date;
+            plan.StartTime = dto.StartTime;
+            plan.EndTime    = dto.EndTime;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -128,13 +169,15 @@ namespace CoachCRM.Controllers
             int userId = User.GetUserId();
 
             var plan = await _context.TrainingPlans
+                .Include(tp => tp.Team)
                 .Include(tp => tp.Athlete)
                     .ThenInclude(a => a.TeamMemberships)
                         .ThenInclude(tm => tm.Team)
                             .ThenInclude(t => t.Coach)
-                .FirstOrDefaultAsync(tp => tp.Id == id &&
-                    tp.Athlete.TeamMemberships
-                        .Any(tm => tm.Team.Coach.UserId == userId));
+                .FirstOrDefaultAsync(tp => tp.Id == id && (
+                    (tp.Team != null && tp.Team.Coach.UserId == userId)
+                    || (tp.Athlete != null && tp.Athlete.TeamMemberships
+                        .Any(tm => tm.Team.Coach.UserId == userId))));
 
             if (plan == null)
                 return NotFound();

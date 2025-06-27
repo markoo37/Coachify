@@ -8,7 +8,7 @@ namespace CoachCRM.Dtos
         public DateTime BirthDate { get; set; }
         public double Weight    { get; set; }
         public double Height    { get; set; }
-        public int TeamId       { get; set; }
+        public int? TeamId       { get; set; }
 
         // ÚJ mező:
         public string Email     { get; set; } = null!;

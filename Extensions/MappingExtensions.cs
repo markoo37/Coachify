@@ -42,17 +42,22 @@ namespace CoachCRM.Extensions
                     .ToList()
             };
 
-        public static TrainingPlanDto ToDto(this TrainingPlan plan) =>
-            new TrainingPlanDto
-            {
-                Id = plan.Id,
-                Name = plan.Name,
-                Description = plan.Description,
-                StartDate = plan.StartDate,
-                EndDate = plan.EndDate,
-                AthleteId = plan.AthleteId,
-                TeamId = plan.TeamId
-            };
+        public static TrainingPlanDto ToDto(this TrainingPlan plan) => new()
+        {
+            Id            = plan.Id,
+            Name          = plan.Name,
+            Description   = plan.Description,
+            Date          = plan.Date,
+            StartTime     = plan.StartTime,
+            EndTime       = plan.EndTime,
+            AthleteId     = plan.AthleteId,
+            AthleteName   = plan.Athlete != null 
+                ? $"{plan.Athlete.FirstName} {plan.Athlete.LastName}" 
+                : null,
+            TeamId        = plan.TeamId,
+            TeamName      = plan.Team?.Name
+        };
+
 
         // ÚJ: User mappings
         public static BaseUserDto ToDto(this BaseUser user) =>

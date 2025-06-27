@@ -5,8 +5,10 @@ public class TrainingPlan
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public DateOnly Date { get; set; } // Csak a nap
+    public TimeOnly? StartTime { get; set; } // Pl. 08:00
+    public TimeOnly? EndTime { get; set; } // Pl. 09:30
+
     
     
     //kapcsolatok

@@ -30,11 +30,12 @@ namespace CoachCRM.Controllers
             if (coach == null)
                 return Unauthorized();
 
-            // Include TeamMemberships instead of Athletes
+            // Include TeamMemberships instead of Athletes, de kiszűrjük a "_Unassigned" csapatot
             var teams = await _context.Teams
-                .Where(t => t.CoachId == coach.Id)
+                .Where(t => t.CoachId == coach.Id && t.Name != "_Unassigned")
                 .Include(t => t.TeamMemberships)
                     .ThenInclude(tm => tm.Athlete)
+                        .ThenInclude(a => a.User)
                 .ToListAsync();
 
             var result = teams.Select(t => new
@@ -48,7 +49,9 @@ namespace CoachCRM.Controllers
                     tm.Athlete.LastName,
                     tm.Athlete.BirthDate,
                     tm.Athlete.Weight,
-                    tm.Athlete.Height
+                    tm.Athlete.Height,
+                    tm.Athlete.Email,
+                    HasUserAccount = tm.Athlete.User != null
                 })
             });
 
@@ -66,7 +69,7 @@ namespace CoachCRM.Controllers
                 .FirstOrDefaultAsync();
 
             var teams = await _context.Teams
-                .Where(t => t.CoachId == coachId)
+                .Where(t => t.CoachId == coachId && t.Name != "_Unassigned")
                 .ToListAsync();
 
             var dtoList = teams.Select(t => t.ToDto()).ToList();
@@ -105,6 +108,10 @@ namespace CoachCRM.Controllers
                 .FirstOrDefaultAsync(t => t.Id == id && t.Coach.UserId == userId);
             if (team == null)
                 return NotFound();
+
+            // Nem engedjük a "_Unassigned" csapat törlését
+            if (team.Name == "_Unassigned")
+                return BadRequest("Cannot delete the unassigned team.");
 
             _context.Teams.Remove(team);
             await _context.SaveChangesAsync();
